@@ -86,3 +86,37 @@ class TestFileStorage(unittest.TestCase):
     @unittest.skipIf(models.storage_t != 'db', "not testing db storage")
     def test_save(self):
         """Test that save properly saves objects to file.json"""
+
+    @unittest.skipIf(models.storage_t != 'db', "not testing db storage")
+    def test_get(self):
+        """test_get, Retrieving a object"""
+        self.assertNotEqual(models.storage.get('Land', '20'), int)
+        new_st = State(name='Sonoma')
+        models.storage.new(new_st)
+        models.storage.save()
+        self.assertEqual(models.storage.get(State, new_st.id).id, new_st.id)
+
+    @unittest.skipIf(models.storage_t != 'db', "not testing db storage")
+    def test_count(self):
+        """test_count, Retrieving a count of the objects"""
+        self.assertIs(type(models.storage.count()), int)
+        before = models.storage.count(State)
+        new_st = State(name='Sonoma')
+        models.storage.new(new_st)
+        models.storage.save()
+        after = models.storage.count(State)
+        self.assertNotEqual(before, after)
+
+    @unittest.skipIf(models.storage_t != 'db', "not testing db storage")
+    def test_get_with_none(self):
+        """test_get_with_none, Test the get of filestorage with none"""
+        models.storage.close()
+        models.storage = models.engine.db_storage.DBStorage()
+        models.storage.reload()
+        obj = self.populate()
+        after = models.storage.get(type(obj[0]), None)
+        self.assertEqual(after, None)
+        with self.assertRaises(KeyError):
+            models.storage.get(None, obj[0].id)
+        with self.assertRaises(KeyError):
+            models.storage.get(None, None)
